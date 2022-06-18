@@ -1,0 +1,81 @@
+'''*/ What is the Highest year of sales and orders?
+to answer this question we need to query the year by using STRFTIME statement
+and count the invoice in invoiceline table and sum the unitprice there,by joins all 
+tables we can get the result by group by the date and after that sort 
+it by total sales.'''
+Query#1:
+
+SELECT strftime('%Y',InvoiceDate) order_year,
+count( InvoiceLine.InvoiceId) order_count ,
+sum(InvoiceLine.UnitPrice * InvoiceLine.Quantity) total_sales
+FROM Invoice
+JOIN InvoiceLine
+ON Invoice.InvoiceId = InvoiceLine.InvoiceId
+GROUP BY 1
+ORDER BY total_sales DESC;
+---------------------------------------------------------------------------
+'''*/ What is the most popular genre of music?
+to answer this question we need to know how many order purchase and genre name,
+we need to joins following tables customers,invoice, invoiceline,track,genre 
+and group by the genre name,after that sort it by invoice cont number.'''
+ 
+Query#2:
+
+SELECT Genre.Name,count(invoiceline.UnitPrice * InvoiceLine.Quantity) AS total_purchase
+FROM Customer
+JOIN Invoice
+ON Invoice.CustomerId = Customer.CustomerId
+JOIN InvoiceLine
+ON Invoice.InvoiceId = InvoiceLine.InvoiceId
+JOIN Track
+ON InvoiceLine.TrackId = Track.TrackId
+JOIN Genre
+ON Track.GenreId = Genre.GenreId
+GROUP BY 1
+ORDER BY 2 DESC
+-----------------------------------------------------------------------------
+'''*/Top 10 Customers Spent Money For Music?
+to provide that we need to use the subquery WITH to get the total spend money as t1
+and take the MAX of total spend money from it as t2 and joins both of tables 
+and sort it.'''
+
+Query#3:
+
+WITH t1 AS 
+(
+	SELECT c.CustomerId,c.FirstName, c.LastName,c.Country,
+	SUM(i.Total) Total_Spent
+	FROM Customer c
+		JOIN Invoice i
+		ON c.CustomerId = i.CustomerId
+	GROUP BY c.CustomerId)
+	
+SELECT t1.*
+FROM t1
+JOIN(
+	SELECT  CustomerId, FirstName, LastName,Country,
+	MAX(Total_Spent) AS MaxTotal_Spent
+	FROM t1
+	GROUP BY Country
+)t2
+ON t1.Country = t2.Country
+AND t1.Total_Spent = t2.MaxTotal_Spent
+ORDER BY Total_Spent DESC
+LIMIT 10;
+
+------------------------------------------------------------------------------
+'''*/ What is the highest country spend money for purchase?
+to answer this question we need to SUM the unitprice in invoiceline table
+and join it with invoice tabke to know which the highest country 
+and sort it'''
+
+Query#4:
+
+SELECT Invoice.BillingCountry AS country_name
+,sum(InvoiceLine.UnitPrice * InvoiceLine.Quantity) AS total_money
+FROM Invoice
+JOIN InvoiceLine
+ON Invoice.InvoiceId = InvoiceLine.InvoiceId
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 6;
